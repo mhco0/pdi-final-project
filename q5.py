@@ -38,10 +38,12 @@ C2_BMP_PATH = "./Imagens/Q5/C2.bmp"
 C3_BMP_PATH = "./Imagens/Q5/C3.bmp"
 
 
+# Some edge detection kernel
 def edge_dection_kernel() -> np.ndarray:
     return convolve2d(LAPLACIAN_FILTER_KERNEL, GAUSSIAN_FILTER_KERNEL)
 
 
+# Closes the image by dilate then erode
 def close_image(image: np.ndarray) -> np.ndarray:
     circle_structure_element = (
         np.array(
@@ -60,6 +62,7 @@ def close_image(image: np.ndarray) -> np.ndarray:
     return closed_image.astype("uint8")
 
 
+# Open some image by eroding then dilating
 def open_image(image: np.ndarray) -> np.ndarray:
     circle_structure_element = (
         np.array(
@@ -78,51 +81,35 @@ def open_image(image: np.ndarray) -> np.ndarray:
 
 
 def main():
-    custom_contour_extraction(SCENE_BMP_PATH)
-
+    # Read image
     scene_image = read_images([SCENE_BMP_PATH])[0]
 
+    # Assert grey scale
     assert_images_grey_scale(scene_image)
 
-    scene_image = equalize(scene_image)
+    # Convert to work with only one image
+    scene_image = cv2.cvtColor(scene_image, cv2.COLOR_BGR2GRAY)
 
+    # Apply Gaussian filter
+    scene_image = clip_gray_image(correlate2d(scene_image, GAUSSIAN_FILTER_KERNEL))
+
+    show_image(scene_image)
+
+    # Binarize
     binarized_edge_image = clip_gray_image(
         binarize(scene_image, two_peaks(scene_image))
     )
 
-    binarized_edge_image = cv2.cvtColor(binarized_edge_image, cv2.COLOR_BGR2GRAY)
+    show_image(binarized_edge_image)
 
+    # Apply Edge detection with Sobel
     sobel_x = correlate2d(binarized_edge_image, SOBEL_FILTER_X_KERNEL)
 
     sobel_y = correlate2d(binarized_edge_image, SOBEL_FILTER_Y_KERNEL)
 
-    sobel = np.abs(sobel_x) + np.abs(sobel_y)
+    sobel = clip_gray_image(np.abs(sobel_x) + np.abs(sobel_y))
 
-    degrees = np.arctan(np.abs(sobel_y) / np.abs(sobel_x))
-
-    show_image(degrees)
-
-    norm, ma, mi = normalize(sobel)
-
-    show_images_hist([norm])
-
-    # show_image(norm)
-
-    # show_image(clip_gray_image(correlate2d(t, LAPLACIAN_FILTER_KERNEL)))
-
-    # scene_image = binarize(scene_image, two_peaks(scene_image))
-
-    # closed_scene_image = close_image(scene_image)
-
-    # closed_scene_image = cv2.cvtColor(closed_scene_image, cv2.COLOR_BGR2GRAY)
-
-    # edge_image = correlate2d(closed_scene_image, edge_dection_kernel())
-
-    # binarized_edge_image = clip_gray_image(binarize(edge_image, two_peaks(edge_image)))
-
-    # binarized_edge_image = cv2.cvtColor(binarized_edge_image, cv2.COLOR_GRAY2BGR)
-
-    # show_image(binarized_edge_image)
+    show_image(sobel)
 
 
 if __name__ == "__main__":

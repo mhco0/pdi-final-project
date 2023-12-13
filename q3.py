@@ -10,6 +10,7 @@ GREEN_WATER_BMP_PATH = "./Imagens/Q3/green-water.bmp"
 SURF_51_BMP_PATH = "./Imagens/Q3/surf_51.bmp"
 
 
+# Gets the total number of colors in one image
 def get_colors(image: np.ndarray) -> dict:
     b, g, r = image[:, :, 0], image[:, :, 1], image[:, :, 2]
     colors_map = {}
@@ -24,6 +25,7 @@ def get_colors(image: np.ndarray) -> dict:
     return colors_map
 
 
+# Reduces the color pallete of the image based where the color hits on the hsv reduced pallete
 def reduce_color_range(image: np.ndarray) -> np.ndarray:
     image = cv2.cvtColor(image, cv2.COLOR_BGR2HSV)
 
@@ -45,17 +47,23 @@ def reduce_color_range(image: np.ndarray) -> np.ndarray:
 
 
 def main():
+    # Read images
     images = read_images(
         [ARARAS_BMP_PATH, F1_BMP_PATH, GREEN_WATER_BMP_PATH, SURF_51_BMP_PATH]
     )
 
+    # For each image
     for i, image in enumerate(images):
+        # Gets the original number of colors
         colors_size_before = len(get_colors(image))
 
+        # Reduce the range of colors using hsv logic
         images[i] = reduce_color_range(image)
 
+        # Gets the new number of colors
         colors_size_after = len(get_colors(images[i]))
 
+        # Shows the proporsion that reduced
         print(f"Reduction proporsion: {(colors_size_after / colors_size_before):.3f}")
 
     show_images(images)
